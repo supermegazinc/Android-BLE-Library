@@ -6,10 +6,6 @@ plugins {
     id("maven-publish")
 }
 
-val githubProperties = Properties().apply {
-    load(File("${layout.projectDirectory.asFile}/github.properties").inputStream())
-}
-
 android {
 
     namespace = "com.supermegazinc.${project.name}"
@@ -33,13 +29,32 @@ android {
 publishing {
     publications {
         create<MavenPublication>("gpr") {
-            run {
-                groupId = "com.supermegazinc.libraries"
-                artifactId = artifactId
-                version = "2.0"
-                artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
+
+            groupId = "com.supermegazinc.libraries"
+            artifactId = artifactId
+            version = "2.3"
+            artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
+
+            pom {
+                withXml {
+                    val dependenciesNode = asNode().appendNode("dependencies")
+                    configurations.implementation.get().dependencies.forEach { dependency ->
+                        if (dependency.group != null && dependency.version != null) {
+                            dependenciesNode.appendNode("dependency").apply {
+                                appendNode("groupId", dependency.group)
+                                appendNode("artifactId", dependency.name)
+                                appendNode("version", dependency.version)
+                                appendNode("scope", "compile")
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    val githubProperties = Properties().apply {
+        load(File("${layout.projectDirectory.asFile}/github.properties").inputStream())
     }
 
     repositories {

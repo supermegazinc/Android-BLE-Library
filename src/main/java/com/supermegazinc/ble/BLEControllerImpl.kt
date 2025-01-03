@@ -8,6 +8,7 @@ import com.supermegazinc.ble.scanner.BLEScanner
 import com.supermegazinc.ble.scanner.BLEScannerImpl
 import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
+import com.supermegazinc.logger.LoggerImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class BLEControllerImpl(
     context: Context,
-    logger: Logger,
+    logger: Logger = LoggerImpl(),
     coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : BLEController {
 

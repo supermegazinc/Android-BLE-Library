@@ -1,6 +1,6 @@
 # Supermegazinc's BLE
 
-This library is intended to extend the power of the Android Bluetooth module by taking advantage of the coroutine API, Flow, and usage changes that will make the experience of implementing BLE in your application much more enjoyable.
+This library is intended to extend the power of the Android Bluetooth module by taking advantage of the coroutine API, Flow, and usage changes that will make the experience of implementing BLE in your application much, MUCH more enjoyable.
 
 This library is involved in most BLE use cases, from requesting adapter power-on to receiving messages. In other words, this library can replace the Android Bluetooth module in most use cases.
 
@@ -29,32 +29,82 @@ The BLEDevice class allows you to manage the connection of an specific device, s
 BLEController is the class that centralice all the features above, so its the only instance you will create.
 
 # Prerequisites
+
 ## Dependencies
   This library depends on 2 other modules created by me:
-  * logger_library
-  * escentials_library
+  * logger-library
+  * escentials-library
     
   I know, such an egocentric. Fortunately those two libraries are very simple so don't worry about deprecation.
-  
-  You can find both modules in my profile and install them the same way as the next step.
 
 ## Installing this library
+
+### Github package (easy way)
+
+  1. Go to https://github.com/settings/tokens and create a new token with `read:packages`
+
+  2. In your project root folder, create the file `github.properties` and add the following:
+
+      ```Gradle
+      gpr.usr=YOUR_USER
+      gpr.key=YOUR_TOKEN  
+      ```
+
+  3. Open your `settings.gradle.kts` file and add the dependencies. Should look like:
+
+      ```Gradle
+      dependencyResolutionManagement {
+          repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+          repositories {
+              google()
+              mavenCentral()
+
+              val githubProperties = Properties()
+              githubProperties.load(FileInputStream("./github.properties"))
+
+              val githubPackages = listOf(
+                  "https://maven.pkg.github.com/supermegazinc/Android-Logger-Library",
+                  "https://maven.pkg.github.com/supermegazinc/Android-Escentials-Library",
+                  "https://maven.pkg.github.com/supermegazinc/Android-BLE-Library"
+              )
+
+              githubPackages.forEach { packageUrl ->
+                  maven {
+                      name = "GitHubPackages"
+                      url = uri(packageUrl)
+                      credentials {
+                          username = githubProperties["gpr.usr"] as String?
+                          password = githubProperties["gpr.key"] as String?
+                      }
+                  }
+              }
+          }
+      }
+      ```
+
+  4. Open your `build.gradle.kts` (app) and add the dependency:
+
+      ```Gradle
+      implementation("com.supermegazinc.libraries:ble:VERSION")
+      ```
+
+      Change the version to the latest
+  
+### Manually (for coding and debugging)
+
   1. Download the source code
   2. Open your project root folder and create a new folder with the desired name for this library (eg. "ble_library")
   3. Extract the code in the folder
-  4. In your "settings.gradle.kts" add the following lines in the end:
-  ```Gradle
-  include(":escentials_library")
-  include(":logger_library")
-  include(":ble_library")
-  ```
-  5. In your build.gradle.kts (app) add the following dependencies: 
-  ```Gradle
-  implementation(project(":escentials_library"))
-  implementation(project(":logger_library"))
-  implementation(project(":ble_library"))
-  ```
-  6. Hope you understand why Maven Central exists (but hey, we beat the system)
+  4. Inside ble_library folder, create `github.properties` and fill it as above
+  5. In your "settings.gradle.kts" add the following lines in the end:
+      ```Gradle
+      include(":ble_library")
+      ```
+  6. In your build.gradle.kts (app) add the following dependencies: 
+      ```Gradle
+      implementation(project(":ble_library"))
+      ```
+  7. Funny huh?
 
 ## Set-Up the permissions
 Finally something that isn't my fault, let's open the manifest.xml and edit it like this:
