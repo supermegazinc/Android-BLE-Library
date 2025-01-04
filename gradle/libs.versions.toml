@@ -1,10 +1,10 @@
 [versions]
 activityCompose = "1.9.0"
 agp = "8.7.3"
-escentials = "2.0"
+escentials = "2.1"
 kotlin = "1.9.24"
 coreKtx = "1.15.0"
-logger = "2.0"
+logger = "2.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -14,4 +14,3 @@ logger = { module = "com.supermegazinc.libraries:logger", version.ref = "logger"
 [plugins]
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-
