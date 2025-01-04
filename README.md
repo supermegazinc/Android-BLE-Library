@@ -181,46 +181,46 @@ For testing purposes, you can manually grant all the permissions in the app info
    
    Setting the device will create a new BLEDevice that contains everything neccesary to perform a connection.
 
-     ```Kotlin
-     val bleDevice = bleController.setDevice(scannedDevice.mac, mtu) //Where MTU is the maximum ammount of bytes to be transfered by packet (from 23 to 517)
-     if(bleDevice==null) {
-        //error
-     }
-     ```
+    ```Kotlin
+    val bleDevice = bleController.setDevice(scannedDevice.mac, mtu) //Where MTU is the maximum ammount of bytes to be transfered by packet (from 23 to 517)
+    if(bleDevice==null) {
+      //error
+    }
+    ```
 
-  You can also keep track of the device in real time by using ```bleController.device //StateFlow<BLEDevice?>```
+    You can also keep track of the device in real time by using ```bleController.device //StateFlow<BLEDevice?>```
 
 4. Connect to the device
    
    All your effort is compensated by simply doing:
    
-     ```Kotlin
-      val connectionResult = bleDevice.connect()
-      when(connectionResult) {
-        is Result.Fail -> {
-            when(result.error) {
-                BLEGattConnectError.CANT_CONNECT -> TODO()
-                BLEGattConnectError.TIMEOUT -> TODO()
-                BLEGattConnectError.CANCELED -> TODO()
-            }
-        }
-        is Result.Success -> {
-           //You did it
-        }
+    ```Kotlin
+    val connectionResult = bleDevice.connect()
+    when(connectionResult) {
+      is Result.Fail -> {
+          when(result.error) {
+              BLEGattConnectError.CANT_CONNECT -> TODO()
+              BLEGattConnectError.TIMEOUT -> TODO()
+              BLEGattConnectError.CANCELED -> TODO()
+          }
       }
-      ```
+      is Result.Success -> {
+          //You did it
+      }
+    }
+    ```
      
-  About the failures:
-  * CANT_CONNECT: The device has terminated the connection
-  * TIMEOUT: The device did not respond for at least 10 seconds
-  * CANCELED: bleDevice.connect() was triggered again during this attemp
+    About the failures:
+    * CANT_CONNECT: The device has terminated the connection
+    * TIMEOUT: The device did not respond for at least 10 seconds
+    * CANCELED: bleDevice.connect() was triggered again during this attemp
 
-  You can also keep track of the connection in real time using ```bleDevice.status //StateFlow<BLEDeviceStatus>```
-  
-  Where BLEDeviceStatus can be:
-  * Connected
-  * Disconnected(val reason: BLEDisconnectionReason)
-  * Connecting
+    You can also keep track of the connection in real time using ```bleDevice.status //StateFlow<BLEDeviceStatus>```
+    
+    Where BLEDeviceStatus can be:
+    * Connected
+    * Disconnected(val reason: BLEDisconnectionReason)
+    * Connecting
 
 5. Using services and characteristics
    
