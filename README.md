@@ -26,7 +26,7 @@ The BLEDevice class allows you to manage the connection of an specific device, s
 * Characteristics are automatically discovered and subscribed to real time changes
 
 ## Controller
-BLEController is the class that centralice all the features above, so its the only instance you will create.
+BLEController is the class that centralize all the features above, so its the only instance you will create.
 
 # Installation
 
@@ -164,10 +164,10 @@ For testing purposes, you can manually grant all the permissions in the app info
 
 3. Set the device
    
-   Setting the device will create a new BLEDevice that contains everything neccesary to perform a connection.
+   Setting the device will create a new BLEDevice that contains everything necessary to perform a connection.
 
     ```Kotlin
-    val bleDevice = bleController.setDevice(scannedDevice.mac, mtu) //Where MTU is the maximum ammount of bytes to be transfered by packet (from 23 to 517)
+    val bleDevice = bleController.setDevice(scannedDevice.mac, mtu) //Where MTU is the maximum amount of bytes to be transferred by packet (from 23 to 517)
     if(bleDevice==null) {
       //error
     }
@@ -198,7 +198,7 @@ For testing purposes, you can manually grant all the permissions in the app info
     About the failures:
     * CANT_CONNECT: The device has terminated the connection
     * TIMEOUT: The device did not respond for at least 10 seconds
-    * CANCELED: bleDevice.connect() was triggered again during this attemp
+    * CANCELED: bleDevice.connect() was triggered again during this attempt
 
     You can also keep track of the connection in real time using ```bleDevice.status //StateFlow<BLEDeviceStatus>```
     
