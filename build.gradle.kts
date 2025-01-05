@@ -32,7 +32,7 @@ publishing {
 
             groupId = "com.supermegazinc.libraries"
             artifactId = artifactId
-            version = "2.4"
+            version = "2.5"
             artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
 
             pom {
@@ -60,7 +60,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/supermegazinc/Android-BLE-Library")
+            url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
             credentials {
                 username = githubProperties["gpr.usr"] as String?
                 password = githubProperties["gpr.key"] as String?

@@ -28,18 +28,9 @@ The BLEDevice class allows you to manage the connection of an specific device, s
 ## Controller
 BLEController is the class that centralice all the features above, so its the only instance you will create.
 
-# Prerequisites
+# Installation
 
-## Dependencies
-  This library depends on 2 other modules created by me:
-  * logger-library
-  * escentials-library
-    
-  I know, such an egocentric. Fortunately those two libraries are very simple so don't worry about deprecation.
-
-## Installing this library
-
-### Github package (easy way)
+## Github package (easy way)
 
   1. Go to https://github.com/settings/tokens and create a new token with `read:packages`
 
@@ -62,16 +53,10 @@ BLEController is the class that centralice all the features above, so its the on
               val githubProperties = Properties()
               githubProperties.load(FileInputStream("./github.properties"))
 
-              val githubPackages = listOf(
-                  "https://maven.pkg.github.com/supermegazinc/Android-Logger-Library",
-                  "https://maven.pkg.github.com/supermegazinc/Android-Escentials-Library",
-                  "https://maven.pkg.github.com/supermegazinc/Android-BLE-Library"
-              )
-
               githubPackages.forEach { packageUrl ->
                   maven {
                       name = "GitHubPackages"
-                      url = uri(packageUrl)
+                      url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
                       credentials {
                           username = githubProperties["gpr.usr"] as String?
                           password = githubProperties["gpr.key"] as String?
@@ -90,7 +75,7 @@ BLEController is the class that centralice all the features above, so its the on
 
       Change the version to the latest
   
-### Manually (for coding and debugging)
+## Manually (for coding and debugging)
 
   1. Download the source code
   2. Open your project root folder and create a new folder with the desired name for this library (eg. "ble_library")
