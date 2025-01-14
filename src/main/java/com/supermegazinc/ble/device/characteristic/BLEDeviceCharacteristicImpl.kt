@@ -71,9 +71,8 @@ class BLEDeviceCharacteristicImpl(
         }
     }
 
-    private var job: Job? = null
     init {
-        job = coroutineScope.launch {
+        messageCoroutineScope.launch {
             bleGattController.events
                 .filterIsInstance<BLEGattEvent.Message>()
                 .filter { it.characteristic == characteristic }
@@ -89,7 +88,6 @@ class BLEDeviceCharacteristicImpl(
     }
 
     override fun close() {
-        job?.cancel()
         messageCoroutineScope.cancel()
         bleGattController.instance.value?.setCharacteristicNotification(characteristic,false)
     }

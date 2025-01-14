@@ -20,6 +20,7 @@ import com.supermegazinc.escentials.Result
 import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -53,7 +54,7 @@ class BLEDeviceImpl(
         context = context,
         mtu = mtu,
         logger = logger,
-        coroutineScope = coroutineScope
+        coroutineScope = CoroutineScope(Dispatchers.IO) //TODO: Deberia ser heredado de coroutineScope
     )
 
     private val _status = MutableStateFlow<BLEDeviceStatus>(BLEDeviceStatus.Disconnected(BLEDisconnectionReason.DISCONNECTED))

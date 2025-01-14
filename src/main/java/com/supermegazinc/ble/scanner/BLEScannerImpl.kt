@@ -60,9 +60,12 @@ class BLEScannerImpl(
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 
         val adapterL1 = adapter.adapter
-        if(adapterL1==null) logger.e(LOG_KEY, "ERROR: El adaptador no esta disponible")
+        if(adapterL1==null) {
+            logger.e(LOG_KEY, "ERROR: El adaptador no esta disponible")
+            return
+        }
 
-        adapterL1!!
+        adapterL1
             .bluetoothLeScanner
             .startScan(
                 filters,
@@ -79,9 +82,12 @@ class BLEScannerImpl(
 
         val adapterL1 = adapter.adapter
 
-        if(adapterL1==null) logger.e(LOG_KEY, "ERROR: El adaptador no esta disponible")
+        if(adapterL1==null) {
+            logger.e(LOG_KEY, "ERROR: El adaptador no esta disponible")
+            return
+        }
 
-        adapterL1!!
+        adapterL1
             .bluetoothLeScanner
             .stopScan(scanCallback)
         logger.i(LOG_KEY, "Escaneo detenido")
