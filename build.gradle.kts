@@ -79,6 +79,6 @@ publishing {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.logger)
-    implementation(libs.libraries.escentials)
+    implementation(libs.supermegazinc.logger)
+    implementation(libs.supermegazinc.escentials)
 }
