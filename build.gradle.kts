@@ -26,14 +26,21 @@ android {
 
 }
 
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(android.sourceSets["main"].java.srcDirs)
+}
+
 publishing {
     publications {
         create<MavenPublication>("gpr") {
 
             groupId = "com.supermegazinc.libraries"
             artifactId = artifactId
-            version = "2.6"
+            version = "2.7"
             artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
+
+            artifact(sourcesJar.get())
 
             pom {
                 withXml {
