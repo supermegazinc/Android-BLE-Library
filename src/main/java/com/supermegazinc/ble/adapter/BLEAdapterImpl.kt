@@ -70,9 +70,9 @@ class BLEAdapterImpl(
                     device = device,
                     mtu = mtu,
                     context = context,
-                    adapter = this,
                     coroutineScope = coroutineScope,
-                    logger = logger
+                    logger = logger,
+                    adapter = this
                 )
             }
         }

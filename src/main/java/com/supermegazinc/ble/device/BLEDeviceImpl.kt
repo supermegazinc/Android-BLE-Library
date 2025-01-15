@@ -19,21 +19,28 @@ import com.supermegazinc.ble.mappers.toBLEDeviceService
 import com.supermegazinc.escentials.Result
 import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 
 @SuppressLint("MissingPermission")
 class BLEDeviceImpl(
@@ -54,7 +61,7 @@ class BLEDeviceImpl(
         context = context,
         mtu = mtu,
         logger = logger,
-        coroutineScope = CoroutineScope(Dispatchers.IO) //TODO: Deberia ser heredado de coroutineScope
+        coroutineScope = coroutineScope
     )
 
     private val _status = MutableStateFlow<BLEDeviceStatus>(BLEDeviceStatus.Disconnected(BLEDisconnectionReason.DISCONNECTED))
@@ -76,30 +83,42 @@ class BLEDeviceImpl(
     override val characteristics: StateFlow<List<BLEDeviceCharacteristic>>
         get() = _characteristics.asStateFlow()
 
+    private var connectScope: CoroutineScope? = null
     override suspend fun connect(): Result<Unit, BLEGattConnectError> {
-        logger.i(LOG_KEY, "Conectando dispositivo..")
+        connectScope?.cancel()
+        connectScope = CoroutineScope(coroutineScope.coroutineContext)
+        return withContext(connectScope!!.coroutineContext) {
+            try {
+                logger.i(LOG_KEY, "Conectando dispositivo..")
 
-        val adapterState = adapter.state.value
-        if(adapterState !is Status.Ready || adapterState.data != BLEAdapterState.ON) return Result.Fail(BLEGattConnectError.CANT_CONNECT)
+                val adapterState = adapter.state.value
+                if(adapterState !is Status.Ready || adapterState.data != BLEAdapterState.ON) return@withContext Result.Fail<Unit, BLEGattConnectError>(BLEGattConnectError.CANT_CONNECT)
 
-        return bleGattController.connect().also { result->
-            if(result is Result.Fail) {
-                logger.e(LOG_KEY, "No se pudo conectar")
-                _status.update { BLEDeviceStatus.Disconnected(
-                    when(result.error) {
-                        BLEGattConnectError.CANT_CONNECT -> BLEDisconnectionReason.CANT_CONNECT
-                        BLEGattConnectError.TIMEOUT -> BLEDisconnectionReason.TIMEOUT
-                        BLEGattConnectError.CANCELED -> BLEDisconnectionReason.DISCONNECTED
+                return@withContext bleGattController.connect().also { result->
+                    if(result is Result.Fail) {
+                        logger.e(LOG_KEY, "No se pudo conectar")
+                        val error = when(result.error) {
+                            BLEGattConnectError.CANT_CONNECT -> BLEDisconnectionReason.CANT_CONNECT
+                            BLEGattConnectError.TIMEOUT -> BLEDisconnectionReason.TIMEOUT
+                            BLEGattConnectError.CANCELED -> BLEDisconnectionReason.CANT_CONNECT
+                        }
+                        _status.update { BLEDeviceStatus.Disconnected(error) }
+                        Result.Fail<Unit, BLEGattConnectError>(result.error)
+                    } else {
+                        bleGattController.discoverServices()
+                        logger.i(LOG_KEY, "Conectado")
+                        Result.Success<Unit, BLEGattConnectError>(Unit)
                     }
-                )
                 }
-            } else {
-                logger.i(LOG_KEY, "Conectado")
+            } catch (e: CancellationException) {
+                logger.e(LOG_KEY, "Conexion cancelada")
+                return@withContext Result.Fail<Unit, BLEGattConnectError>(BLEGattConnectError.CANCELED)
             }
         }
     }
 
     private fun clear() {
+        connectScope?.cancel()
         bleGattController.disconnect()
         _characteristics.update { previousCharacteristics ->
             previousCharacteristics.forEach { it.close() }
@@ -118,16 +137,18 @@ class BLEDeviceImpl(
     }
 
     override fun close() {
-        job?.cancel()
+        clear()
+        job.cancel()
     }
 
-    private var job: Job? = null
+    private var job: Job
     init {
         job = coroutineScope.launch {
             coroutineScope {
                 launch { observeServices() }
                 launch { observeCharacteristics() }
                 launch { observeConnectionEvents() }
+                launch { observeAdapter() }
             }
         }
     }
@@ -175,24 +196,15 @@ class BLEDeviceImpl(
             }
     }
 
-    init {
-        coroutineScope.launch {
-            adapter.state.collectLatest { state->
-                if(state is Status.Ready && state.data != BLEAdapterState.ON) {
-                    disconnect()
-                }
+    private suspend fun observeAdapter() {
+        adapter.state
+            .filterIsInstance<Status.Ready<BLEAdapterState>>()
+            .filter { it.data != BLEAdapterState.ON }
+            .distinctUntilChanged()
+            .collect {
+                logger.e(LOG_KEY, "Adaptador desconectado")
+                clear()
+                _status.update { BLEDeviceStatus.Disconnected(BLEDisconnectionReason.CONNECTION_LOST) }
             }
-        }
-
-        coroutineScope.launch {
-            combine(_status, _characteristics) {status, characteristics->
-                if(status is BLEDeviceStatus.Connected && characteristics.isEmpty()) {
-                    while(isActive) {
-                        bleGattController.discoverServices()
-                        delay(2000)
-                    }
-                }
-            }.collectLatest{}
-        }
     }
 }
