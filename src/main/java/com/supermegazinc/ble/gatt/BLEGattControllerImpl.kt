@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -210,9 +211,9 @@ class BLEGattControllerImpl(
     @SuppressLint("MissingPermission")
     override suspend fun connect(): Result<Unit, BLEGattConnectError> {
         connectJob?.cancel()
-        connectJob = Job()
+        connectJob = Job(coroutineScope.coroutineContext.job)
         return try {
-             withContext(coroutineScope.coroutineContext + connectJob!!) {
+            withContext(coroutineScope.coroutineContext + connectJob!!) {
                  logger.i(LOG_KEY, "Conectando")
                  runSession()
                  _events.waitForNextInstanceWithTimeout<BLEGattEvent.Connection>(10000)?.let { tResult->
