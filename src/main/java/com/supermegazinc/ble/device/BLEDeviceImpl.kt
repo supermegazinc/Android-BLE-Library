@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
@@ -83,21 +84,25 @@ class BLEDeviceImpl(
     override val characteristics: StateFlow<List<BLEDeviceCharacteristic>>
         get() = _characteristics.asStateFlow()
 
-    private var connectScope: CoroutineScope? = null
+    private var connectJob: Job? = null
     override suspend fun connect(): Result<Unit, BLEGattConnectError> {
-        connectScope?.cancel()
-        connectScope = CoroutineScope(coroutineScope.coroutineContext)
-        return withContext(connectScope!!.coroutineContext) {
-            try {
+        connectJob?.cancel()
+        connectJob = Job(coroutineScope.coroutineContext.job)
+
+        return try {
+            withContext(coroutineScope.coroutineContext + connectJob!!) {
+
                 logger.i(LOG_KEY, "Conectando dispositivo..")
 
                 val adapterState = adapter.state.value
-                if(adapterState !is Status.Ready || adapterState.data != BLEAdapterState.ON) return@withContext Result.Fail<Unit, BLEGattConnectError>(BLEGattConnectError.CANT_CONNECT)
+                if (adapterState !is Status.Ready || adapterState.data != BLEAdapterState.ON) return@withContext Result.Fail<Unit, BLEGattConnectError>(
+                    BLEGattConnectError.CANT_CONNECT
+                )
 
-                return@withContext bleGattController.connect().also { result->
-                    if(result is Result.Fail) {
+                bleGattController.connect().also { result ->
+                    if (result is Result.Fail) {
                         logger.e(LOG_KEY, "No se pudo conectar")
-                        val error = when(result.error) {
+                        val error = when (result.error) {
                             BLEGattConnectError.CANT_CONNECT -> BLEDisconnectionReason.CANT_CONNECT
                             BLEGattConnectError.TIMEOUT -> BLEDisconnectionReason.TIMEOUT
                             BLEGattConnectError.CANCELED -> BLEDisconnectionReason.CANT_CONNECT
@@ -105,20 +110,21 @@ class BLEDeviceImpl(
                         _status.update { BLEDeviceStatus.Disconnected(error) }
                         Result.Fail<Unit, BLEGattConnectError>(result.error)
                     } else {
-                        bleGattController.discoverServices()
                         logger.i(LOG_KEY, "Conectado")
+                        bleGattController.discoverServices()
+                        _status.update { BLEDeviceStatus.Connected }
                         Result.Success<Unit, BLEGattConnectError>(Unit)
                     }
                 }
-            } catch (e: CancellationException) {
-                logger.e(LOG_KEY, "Conexion cancelada")
-                return@withContext Result.Fail<Unit, BLEGattConnectError>(BLEGattConnectError.CANCELED)
             }
+        } catch (e: CancellationException) {
+            logger.e(LOG_KEY, "Conexion cancelada")
+            return Result.Fail(BLEGattConnectError.CANCELED)
         }
     }
 
     private fun clear() {
-        connectScope?.cancel()
+        connectJob?.cancel()
         bleGattController.disconnect()
         _characteristics.update { previousCharacteristics ->
             previousCharacteristics.forEach { it.close() }
@@ -197,14 +203,19 @@ class BLEDeviceImpl(
     }
 
     private suspend fun observeAdapter() {
-        adapter.state
-            .filterIsInstance<Status.Ready<BLEAdapterState>>()
-            .filter { it.data != BLEAdapterState.ON }
-            .distinctUntilChanged()
-            .collect {
-                logger.e(LOG_KEY, "Adaptador desconectado")
-                clear()
-                _status.update { BLEDeviceStatus.Disconnected(BLEDisconnectionReason.CONNECTION_LOST) }
+        coroutineScope {
+            _status.collectLatest { tStatus ->
+                if (tStatus !is BLEDeviceStatus.Disconnected) {
+                    adapter.state
+                        .filterIsInstance<Status.Ready<BLEAdapterState>>()
+                        .filter { it.data != BLEAdapterState.ON }
+                        .collect {
+                            logger.e(LOG_KEY, "Adaptador desconectado")
+                            clear()
+                            _status.update { BLEDeviceStatus.Disconnected(BLEDisconnectionReason.CONNECTION_LOST) }
+                        }
+                }
             }
+        }
     }
 }

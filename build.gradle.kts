@@ -37,7 +37,7 @@ publishing {
 
             groupId = "com.supermegazinc.libraries"
             artifactId = artifactId
-            version = "2.9.2"
+            version = "2.9.3"
             artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
 
             artifact(sourcesJar.get())
