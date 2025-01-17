@@ -212,7 +212,7 @@ class BLEDeviceImpl(
                         .collect {
                             logger.e(LOG_KEY, "Adaptador desconectado")
                             clear()
-                            _status.update { BLEDeviceStatus.Disconnected(BLEDisconnectionReason.CONNECTION_LOST) }
+                            _status.emit(BLEDeviceStatus.Disconnected(BLEDisconnectionReason.CONNECTION_LOST))
                         }
                 }
             }

@@ -37,7 +37,7 @@ publishing {
 
             groupId = "com.supermegazinc.libraries"
             artifactId = artifactId
-            version = "2.9.4"
+            version = "2.9.5"
             artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
 
             artifact(sourcesJar.get())
@@ -65,13 +65,17 @@ publishing {
     }
 
     repositories {
+        //maven {
+        //    name = "GitHubPackages"
+        //    url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
+        //    credentials {
+        //        username = githubProperties["gpr.usr"] as String?
+        //        password = githubProperties["gpr.key"] as String?
+        //    }
+        //}
         maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
-            credentials {
-                username = githubProperties["gpr.usr"] as String?
-                password = githubProperties["gpr.key"] as String?
-            }
+            name = "LocalRepository"
+            url = uri("${layout.projectDirectory.asFile}/Repository")
         }
     }
 }
