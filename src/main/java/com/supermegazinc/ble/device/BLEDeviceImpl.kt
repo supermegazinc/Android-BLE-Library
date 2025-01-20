@@ -134,6 +134,11 @@ class BLEDeviceImpl(
         logger.i(LOG_KEY, "Desconectado")
     }
 
+    override fun discoverServices() {
+        logger.i(LOG_KEY, "Descubriendo servicios")
+        bleGattController.discoverServices()
+    }
+
     override fun close() {
         clear()
         job.cancel()

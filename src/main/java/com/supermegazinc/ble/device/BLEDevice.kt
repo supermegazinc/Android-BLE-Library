@@ -15,5 +15,6 @@ interface BLEDevice {
     val characteristics: StateFlow<List<BLEDeviceCharacteristic>>
     suspend fun connect(): Result<Unit, BLEGattConnectError>
     suspend fun disconnect()
+    fun discoverServices()
     fun close()
 }

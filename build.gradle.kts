@@ -65,18 +65,18 @@ publishing {
     }
 
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
-            credentials {
-                username = githubProperties["gpr.usr"] as String?
-                password = githubProperties["gpr.key"] as String?
-            }
-        }
         //maven {
-        //    name = "LocalRepository"
-        //    url = uri("${layout.projectDirectory.asFile}/Repository")
+        //    name = "GitHubPackages"
+        //    url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
+        //    credentials {
+        //        username = githubProperties["gpr.usr"] as String?
+        //        password = githubProperties["gpr.key"] as String?
+        //    }
         //}
+        maven {
+            name = "LocalRepository"
+            url = uri("${layout.projectDirectory.asFile}/Repository")
+        }
     }
 }
 
