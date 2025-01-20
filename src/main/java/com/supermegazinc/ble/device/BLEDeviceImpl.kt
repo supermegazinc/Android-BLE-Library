@@ -21,27 +21,19 @@ import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.coroutineContext
 
 @SuppressLint("MissingPermission")
 class BLEDeviceImpl(
@@ -176,8 +168,13 @@ class BLEDeviceImpl(
             .collect { mappedCharacteristics->
                 logger.i(LOG_KEY, "Caracteristicas actualizadas")
                 _characteristics.update { previousCharacteristics ->
-                    previousCharacteristics.forEach { it.close() }
-                    mappedCharacteristics
+                    val mappedUuidSet = mappedCharacteristics.map { it.uuid }.toSet()
+                    val previousUuidSet = previousCharacteristics.map { it.uuid }.toSet()
+                    val noLongerExist = previousCharacteristics.filter { it.uuid !in mappedUuidSet }
+                    noLongerExist.forEach { it.close() }
+                    val keepUntouched = previousCharacteristics.filter { it.uuid in mappedUuidSet }
+                    val newCharacteristics = mappedCharacteristics.filter { it.uuid !in previousUuidSet }
+                    keepUntouched + newCharacteristics
                 }
             }
     }
