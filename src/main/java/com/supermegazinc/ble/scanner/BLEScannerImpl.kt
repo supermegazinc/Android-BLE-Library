@@ -65,13 +65,12 @@ class BLEScannerImpl(
             return
         }
 
-        adapterL1
-            .bluetoothLeScanner
-            .startScan(
-                filters,
-                settings,
-                scanCallback
-            )
+        val scanner = adapterL1.bluetoothLeScanner
+        if(scanner==null) {
+            logger.e(LOG_KEY, "ERROR: El escaner no esta disponible")
+            return
+        }
+        scanner.startScan(scanCallback)
 
         logger.i(LOG_KEY, "Escaneo comenzado")
 
@@ -87,9 +86,12 @@ class BLEScannerImpl(
             return
         }
 
-        adapterL1
-            .bluetoothLeScanner
-            .stopScan(scanCallback)
+        val scanner = adapterL1.bluetoothLeScanner
+        if(scanner==null) {
+            logger.e(LOG_KEY, "ERROR: El escaner no esta disponible")
+            return
+        }
+        scanner.stopScan(scanCallback)
         logger.i(LOG_KEY, "Escaneo detenido")
     }
 
