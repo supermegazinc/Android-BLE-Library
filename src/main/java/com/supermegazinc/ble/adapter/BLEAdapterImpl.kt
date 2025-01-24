@@ -1,7 +1,9 @@
 package com.supermegazinc.ble.adapter
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -10,8 +12,7 @@ import androidx.activity.result.ActivityResult
 import com.supermegazinc.ble.adapter.model.BLEAdapterState
 import com.supermegazinc.ble.device.BLEDevice
 import com.supermegazinc.ble.device.BLEDeviceImpl
-import com.supermegazinc.ble.scanner.BLEScannerImpl
-import com.supermegazinc.ble.scanner.BLEScannerImpl.Companion
+import com.supermegazinc.ble.gatt.BLEGattController
 import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class BLEAdapterImpl(
+    private val gattControllerFactory: (scope: CoroutineScope, device: BluetoothDevice) -> BLEGattController,
     private val context: Context,
     private val logger: Logger,
     private val coroutineScope: CoroutineScope
@@ -43,17 +45,18 @@ class BLEAdapterImpl(
         get() = _state.asStateFlow()
 
     override fun bluetoothLauncher(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
-        logger.i(LOG_KEY, "Solicitando encender Bluetooth")
+        logger.d(LOG_KEY, "Solicitando encender Bluetooth")
         launcher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
     }
 
     override fun onBluetoothLauncherResult(result: ActivityResult) {
-        if (result.resultCode == Activity.RESULT_OK) logger.i(LOG_KEY, "OK")
+        if (result.resultCode == Activity.RESULT_OK) logger.d(LOG_KEY, "OK")
         else {
             logger.e(LOG_KEY, "ERROR")
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun getDevice(address: String, mtu: Int): BLEDevice? {
         logger.d(LOG_KEY, "Obteniendo dispositivo..")
         return if(adapter==null) {
@@ -67,10 +70,11 @@ class BLEAdapterImpl(
                 null
             } else {
                 BLEDeviceImpl(
-                    device = device,
+                    name = device.name,
+                    mac = device.address,
                     mtu = mtu,
-                    context = context,
-                    coroutineScope = coroutineScope,
+                    gattControllerFactory = { gattControllerFactory(it, device) },
+                    coroutineContext = coroutineScope.coroutineContext,
                     logger = logger,
                     adapter = this
                 )
@@ -91,7 +95,7 @@ class BLEAdapterImpl(
                     _state.value.also { tActualState->
                         if(tActualState !is Status.Ready || tActualState.data != tState) {
                             when(tState) {
-                                BLEAdapterState.ON -> logger.i(LOG_KEY, "Adaptador encendido")
+                                BLEAdapterState.ON -> logger.d(LOG_KEY, "Adaptador encendido")
                                 BLEAdapterState.OFF -> logger.e(LOG_KEY, "Adaptador apagado")
                                 BLEAdapterState.UNAVAILABLE -> logger.e(LOG_KEY, "Adaptador no disponible")
                             }

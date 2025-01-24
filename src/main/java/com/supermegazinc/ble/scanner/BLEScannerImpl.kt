@@ -1,7 +1,6 @@
 package com.supermegazinc.ble.scanner
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -50,13 +49,14 @@ class BLEScannerImpl(
     override fun start(
         serviceUUID: List<UUID>?,
     ) {
-        logger.i(LOG_KEY, "Comenzando escaneo..")
+        logger.d(LOG_KEY, "Comenzando escaneo..")
         stop()
         clear()
 
         val filters = serviceUUID?.map { uuid->
             ScanFilter.Builder().setServiceUuid(ParcelUuid(uuid)).build()
         }
+
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 
         val adapterL1 = adapter.adapter
@@ -70,14 +70,18 @@ class BLEScannerImpl(
             logger.e(LOG_KEY, "ERROR: El escaner no esta disponible")
             return
         }
-        scanner.startScan(scanCallback)
+        scanner.startScan(
+            filters,
+            settings,
+            scanCallback
+        )
 
-        logger.i(LOG_KEY, "Escaneo comenzado")
+        logger.d(LOG_KEY, "Escaneo comenzado")
 
     }
 
     override fun stop() {
-        logger.i(LOG_KEY, "Deteniendo escaneo")
+        logger.d(LOG_KEY, "Deteniendo escaneo")
 
         val adapterL1 = adapter.adapter
 
@@ -92,7 +96,7 @@ class BLEScannerImpl(
             return
         }
         scanner.stopScan(scanCallback)
-        logger.i(LOG_KEY, "Escaneo detenido")
+        logger.d(LOG_KEY, "Escaneo detenido")
     }
 
     override fun clear() {

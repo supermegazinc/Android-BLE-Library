@@ -1,8 +1,7 @@
 package com.supermegazinc.ble.gatt.model
 
 enum class BLEDisconnectionReason {
+    DISCONNECTED,
     CANT_CONNECT,
-    TIMEOUT,
-    CONNECTION_LOST,
-    DISCONNECTED
+    CONNECTION_LOST
 }

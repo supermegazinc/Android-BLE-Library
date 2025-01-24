@@ -1,46 +1,43 @@
 package com.supermegazinc.ble
 
-import android.content.Context
-import com.supermegazinc.ble.adapter.BLEAdapterImpl
-import com.supermegazinc.ble.adapter.model.BLEAdapterState
+import com.supermegazinc.ble.adapter.BLEAdapter
 import com.supermegazinc.ble.device.BLEDevice
 import com.supermegazinc.ble.scanner.BLEScanner
-import com.supermegazinc.ble.scanner.BLEScannerImpl
-import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
 import com.supermegazinc.logger.LoggerImpl
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 class BLEControllerImpl(
-    context: Context,
+    bleAdapterFactory: (scope: CoroutineScope) -> BLEAdapter,
+    bleScannerFactory: (adapter: BLEAdapter) -> BLEScanner,
     logger: Logger = LoggerImpl(),
-    coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    coroutineContext: CoroutineContext
 ) : BLEController {
 
-    override val adapter: BLEAdapterImpl by lazy {
-        BLEAdapterImpl(
-            context,
-            logger,
-            coroutineScope
-        )
+    private companion object {
+        const val LOG_KEY = "BLE"
     }
+
+    private val bleJob = Job().apply {
+        invokeOnCompletion {
+            logger.e(LOG_KEY, "[CRITIC] - Scope cancelado")
+        }
+    }
+    private val bleScope = CoroutineScope(coroutineContext + bleJob)
+
+    override val adapter = bleAdapterFactory(bleScope)
 
     private val _device = MutableStateFlow<BLEDevice?>(null)
     override val device: StateFlow<BLEDevice?>
         get() = _device.asStateFlow()
 
     override fun setDevice(mac: String, mtu: Int): BLEDevice?  {
-        clearDevice()
         return adapter
             .getDevice(mac, mtu)
             .also { newDevice ->
@@ -56,8 +53,6 @@ class BLEControllerImpl(
         _device.update { null }
     }
 
-    override val scanner: BLEScanner by lazy {
-        BLEScannerImpl(logger, adapter)
-    }
+    override val scanner: BLEScanner = bleScannerFactory(adapter)
 
 }
