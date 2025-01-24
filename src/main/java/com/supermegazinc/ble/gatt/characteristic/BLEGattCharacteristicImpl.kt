@@ -34,12 +34,12 @@ class BLEGattCharacteristicImpl(
         get() = _message
 
     override fun setNotification(state: Boolean) {
-        logger.d(LOG_KEY, "$uuid[$this] : Setear notification: $state")
+        logger.d(LOG_KEY, "$uuid : Setear notification: $state")
         bleGattController.instance.value!!.setCharacteristicNotification(characteristic, state)
     }
 
     override fun forceRead() {
-        logger.d(LOG_KEY, "$uuid[$this] : Forzar lectura")
+        logger.d(LOG_KEY, "$uuid : Forzar lectura")
         bleGattController.readCharacteristic(this@BLEGattCharacteristicImpl.uuid)
     }
 
@@ -48,7 +48,7 @@ class BLEGattCharacteristicImpl(
         val messageList = message.toList()
         logger.d(
             LOG_KEY,
-            "$uuid[$this] : Enviando mensaje[BYT]: [${messageList.size}][${messageList.joinToString(",")}]"
+            "$uuid : Enviando mensaje[BYT]: [${messageList.size}][${messageList.joinToString(",")}]"
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             bleGattController.instance.value?.writeCharacteristic(characteristic, message, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
@@ -63,13 +63,13 @@ class BLEGattCharacteristicImpl(
             .filter { it.characteristicUUID == characteristic.uuid }
             .collect { tMessage->
                 val messageList = tMessage.message.toList()
-                logger.d(LOG_KEY,"$uuid[$this] : Mensaje recibido[BYT]: [${messageList.size}][${messageList.joinToString(",")}]")
+                logger.d(LOG_KEY,"$uuid : Mensaje recibido[BYT]: [${messageList.size}][${messageList.joinToString(",")}]")
                 _message.send(tMessage.message)
             }
     }
 
     override fun close() {
-        logger.d(LOG_KEY, "$uuid[$this] : Cerrando")
+        logger.d(LOG_KEY, "$uuid : Cerrando")
         receiveMessagesJob.cancel()
         _message.close()
         bleGattController.instance.value?.setCharacteristicNotification(characteristic,false)
