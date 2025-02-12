@@ -283,7 +283,7 @@ class BLEGattControllerImpl(
                 logger.d(LOG_KEY, "Iniciando sesion..")
                 runSession()
                 val connectionResult = try {
-                    _connectionEvents.waitForNextWithTimeout(10000)
+                    _connectionEvents.waitForNextWithTimeout(20000)
                 } catch (e: CancellationException) {
                     logger.e(LOG_KEY, "No se pudo iniciar la sesion: Timeout")
                     return@withContext false

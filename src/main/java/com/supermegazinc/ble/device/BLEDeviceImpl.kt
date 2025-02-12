@@ -9,6 +9,7 @@ import com.supermegazinc.ble.gatt.service.BLEGattService
 import com.supermegazinc.ble.gatt.BLEGattController
 import com.supermegazinc.ble.gatt.model.BLEDisconnectionReason
 import com.supermegazinc.ble.gatt.model.BLESessionConnectionEvent
+import com.supermegazinc.ble.gatt.model.BLESessionServiceEvent
 import com.supermegazinc.escentials.Status
 import com.supermegazinc.logger.Logger
 import kotlinx.coroutines.CancellationException
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -119,9 +121,10 @@ class BLEDeviceImpl(
         logger.d(LOG_KEY, "Dispositivo desconectado")
     }
 
-    override fun discoverServices() {
+    override suspend fun discoverServices(): Boolean {
         logger.d(LOG_KEY, "Descubriendo servicios")
         bleGattController.discoverServices()
+        return bleGattController.serviceEvents.first() == BLESessionServiceEvent.SUCCESS
     }
 
     override fun close() {

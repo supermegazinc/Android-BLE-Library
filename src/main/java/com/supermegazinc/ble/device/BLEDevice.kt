@@ -14,6 +14,6 @@ interface BLEDevice {
     val characteristics: StateFlow<List<BLEGattCharacteristic>>
     suspend fun connect(): Boolean
     suspend fun disconnect()
-    fun discoverServices()
+    suspend fun discoverServices(): Boolean
     fun close()
 }

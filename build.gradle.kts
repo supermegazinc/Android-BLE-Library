@@ -16,12 +16,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "19"
     }
 
 }
@@ -37,7 +37,7 @@ publishing {
 
             groupId = "com.supermegazinc.libraries"
             artifactId = artifactId
-            version = "3.0.0"
+            version = "3.0.1"
             artifact("${layout.buildDirectory.get().asFile}/outputs/aar/$artifactId-release.aar")
 
             artifact(sourcesJar.get())
@@ -65,18 +65,18 @@ publishing {
     }
 
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
-            credentials {
-                username = githubProperties["gpr.usr"] as String?
-                password = githubProperties["gpr.key"] as String?
-            }
-        }
         //maven {
-        //    name = "LocalRepository"
-        //    url = uri("${layout.projectDirectory.asFile}/Repository")
+        //    name = "GitHubPackages"
+        //    url = uri("https://maven.pkg.github.com/supermegazinc/Android-Libraries")
+        //    credentials {
+        //        username = githubProperties["gpr.usr"] as String?
+        //        password = githubProperties["gpr.key"] as String?
+        //    }
         //}
+        maven {
+            name = "LocalRepository"
+            url = uri("${layout.projectDirectory.asFile}/Repository")
+        }
     }
 }
 
